@@ -9,13 +9,19 @@ jobs:
       matrix:
         paper: ['26.2', '26.3']
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
-      - uses: gradle/actions/setup-gradle@v4
-      - run: ./gradlew :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }}
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Build shaded plugin
+        run: |
+          ./gradlew :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }} --console=plain 2>&1 | tee "$RUNNER_TEMP/build.log" || {
+            tail -80 "$RUNNER_TEMP/build.log" | while IFS= read -r line; do echo "::error::${line//%/%25}"; done
+            exit 1
+          }
+        shell: bash
       - name: Verify packaged descriptor
         run: |
           unzip -p paper/build/libs/FancyTags-*.jar paper-plugin.yml > "$RUNNER_TEMP/descriptor"
