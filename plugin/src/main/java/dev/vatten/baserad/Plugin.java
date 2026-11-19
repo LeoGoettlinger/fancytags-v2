@@ -56,6 +56,8 @@ public class Plugin extends VattenPlugin {
 
     protected Plugin(VattenPlatform<?, ?> pluginInterface, Type type, Path path) {
         super(pluginInterface, type, path);
+        onEnable();
+        reload();
     }
 
     @Override
@@ -133,7 +135,7 @@ public class Plugin extends VattenPlugin {
 
     void registerMiniPlaceholders() {
         Expansion.builder("fancytags")
-                .author("vatten")
+                .author("SampleCraft")
                 .version(this.pluginInfo.version())
                 .globalPlaceholder("tag", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getTagStore().getTag(queue.pop().value()).asComponent()))
                 .globalPlaceholder("internal", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getInternalTagStore().getTag(queue.pop().value()).asComponent()))

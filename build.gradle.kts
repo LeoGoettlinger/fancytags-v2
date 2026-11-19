@@ -1,7 +1,7 @@
 plugins {
     id("java")
-    id("com.gradleup.shadow") version "8.3.9"
-    id("org.cadixdev.licenser") version "0.6.1"
+    id("com.gradleup.shadow") version "9.3.1"
+    id("net.neoforged.licenser") version "0.7.5"
 }
 
 group = "dev.vatten"
@@ -17,7 +17,7 @@ dependencies {
 allprojects {
     apply(plugin = "java")
     apply(plugin = "com.gradleup.shadow")
-    apply(plugin = "org.cadixdev.licenser")
+    apply(plugin = "net.neoforged.licenser")
 
     group = rootProject.group
     val pluginId = rootProject.name
@@ -44,18 +44,17 @@ allprojects {
         compileOnly("me.clip:placeholderapi:2.11.6")
         compileOnly("io.github.miniplaceholders:miniplaceholders-api:3.0.1")
 
-        compileOnly("org.projectlombok:lombok:1.18.34")
-        annotationProcessor("org.projectlombok:lombok:1.18.34")
+        compileOnly("org.projectlombok:lombok:1.18.42")
+        annotationProcessor("org.projectlombok:lombok:1.18.42")
     }
 
-    artifacts {
-        archives(tasks.shadowJar)
+    if (project.name in listOf("common", "plugin")) {
+        tasks.withType<JavaCompile>().configureEach { options.release.set(21) }
     }
 
     tasks.shadowJar {
         archiveClassifier.set("")
         archiveFileName.set("${pluginName}-${version}.jar")
-        minimize()
     }
 
     license {

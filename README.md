@@ -1,6 +1,14 @@
 # FancyTags
 
-hello
+Paper-Zielversionen: **26.2 und 26.3** (Java 25). Dasselbe Plugin-JAR wird gegen die ältere API gebaut.
+
+```sh
+./gradlew :paper:shadowJar
+./gradlew :paper:runServer -PpaperVersion=26.2
+./gradlew :paper:runServer -PpaperVersion=26.3
+```
+
+Das Plugin liegt nach dem Build unter `paper/build/libs/`. Die Testserver verwenden getrennte Verzeichnisse unter `paper/run/`.
 
 
 ## Fetch Template Changes

@@ -53,9 +53,6 @@ public class VattenPlugin {
             throw new RuntimeException(e);
         }
         this.pluginInfo = new PluginInfo(p.getProperty("name"), p.getProperty("displayName"), p.getProperty("version"), type);
-
-        onEnable();
-        reload();
     }
 
     VattenPlayer getPlayer(UUID uuid) {

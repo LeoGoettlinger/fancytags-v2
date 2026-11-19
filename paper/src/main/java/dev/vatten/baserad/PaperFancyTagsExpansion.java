@@ -37,7 +37,7 @@ public class PaperFancyTagsExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull String getAuthor() {
-        return "vatten";
+        return "SampleCraft";
     }
 
     @Override

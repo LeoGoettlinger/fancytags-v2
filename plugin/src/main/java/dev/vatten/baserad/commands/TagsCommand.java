@@ -116,14 +116,15 @@ public class TagsCommand extends Command {
                         return;
                     }
                     if(tagStore.getTagNames().contains(args[2])) {
-                        player.sendMessage(TextFormatter.WARN.format("A tag with the name '" + args[1] + "' already exists."));
+                        player.sendMessage(TextFormatter.WARN.format("A tag with the name '" + args[2] + "' already exists."));
                         return;
                     }
                     player.sendMessage(plugin.getInterfaces().createConfirmInterface(Component.textOfChildren(Component.text("rename '" + args[1] + "' ("), TextFormatter.RESET.format(tagStore.getTag(args[1]).asComponent()), Component.text(") to '" + args[2] + "'")),
                             (audience) -> {
-                                Tag tag = tagStore.getTag(args[1]);
-                                tagStore.removeTag(args[1]);
-                                tagStore.addTag(args[2], tag);
+                                if (!plugin.getTagStore().renameTag(args[1], args[2])) {
+                                    player.sendMessage(TextFormatter.WARN.format("Tags changed before confirmation; nothing was renamed."));
+                                    return;
+                                }
                                 player.sendMessage(plugin.getPluginTextFormatter().format(TextFormatter.SUCCESS.format("Tag '" + args[1] + "' was renamed to '" + args[2] + "'.")));
                             }
                     ).asComponent());

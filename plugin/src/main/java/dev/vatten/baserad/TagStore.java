@@ -53,6 +53,14 @@ public class TagStore {
         return true;
     }
 
+    public boolean renameTag(String from, String to) {
+        if (!tags.containsKey(from) || tags.containsKey(to)) return false;
+        tags.put(to, tags.remove(from));
+        refresh();
+        plugin.saveTags();
+        return true;
+    }
+
     public boolean removeTag(String tagName) {
         if(tags.containsKey(tagName)) {
             tags.remove(tagName);
@@ -73,6 +81,7 @@ public class TagStore {
 
     private void refresh() {
         List<String> names = new ArrayList<>();
+        tagAtlasLength = 0;
         Component atlas = Component.empty();
         for(Map.Entry<String, Tag> entry : tags.entrySet()) {
             Component serialized = entry.getValue().serialize(plugin.getMiniMessage());

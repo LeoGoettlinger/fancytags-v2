@@ -75,12 +75,17 @@ public class PaperVattenPlatform extends JavaPlugin implements VattenPlatform<Pl
         registerCommand(command.getName(), command.getAliases(), new BasicCommand() {
             @Override
             public void execute(CommandSourceStack commandSourceStack, String[] args) {
-                command.execute(plugin.getPlayer(((Player) commandSourceStack.getSender()).getUniqueId()), args);
+                if (commandSourceStack.getSender() instanceof Player player) {
+                    command.execute(wrapPlayer(player), args);
+                } else {
+                    commandSourceStack.getSender().sendMessage("This command can only be used by players.");
+                }
             }
 
             @Override
             public Collection<String> suggest(CommandSourceStack commandSourceStack, String[] args) {
-                return command.onTabComplete(plugin.getPlayer(((Player) commandSourceStack.getSender()).getUniqueId()), args);
+                return commandSourceStack.getSender() instanceof Player player
+                        ? command.onTabComplete(wrapPlayer(player), args) : java.util.List.of();
             }
 
             @Override

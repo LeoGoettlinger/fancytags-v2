@@ -1,0 +1,30 @@
+name: Paper compatibility
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        paper: ['26.2', '26.3']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }}
+      - name: Verify packaged descriptor
+        run: |
+          unzip -p paper/build/libs/FancyTags-*.jar paper-plugin.yml > "$RUNNER_TEMP/descriptor"
+          grep -Fx "api-version: '26.2'" "$RUNNER_TEMP/descriptor"
+          grep -Fx 'authors: [SampleCraft]' "$RUNNER_TEMP/descriptor"
+      - name: Upload installable Paper plugin
+        if: matrix.paper == '26.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: FancyTags-Paper-26.2-26.3
+          path: paper/build/libs/FancyTags-*.jar
+          if-no-files-found: error

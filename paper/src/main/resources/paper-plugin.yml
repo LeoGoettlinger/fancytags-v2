@@ -17,7 +17,8 @@
 name: "${pluginName}"
 version: "${version}"
 main: "dev.vatten.baserad.PaperVattenPlatform"
-api-version: '1.21.11'
+api-version: '26.2'
+authors: [SampleCraft]
 
 dependencies:
   server:
