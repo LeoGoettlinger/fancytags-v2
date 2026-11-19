@@ -21,7 +21,7 @@ allprojects {
 
     group = rootProject.group
     val pluginId = rootProject.name
-    val pluginName = rootProject.property("pluginName")
+    val pluginName = providers.gradleProperty("pluginName").get()
     version = rootProject.version
 
     repositories {
