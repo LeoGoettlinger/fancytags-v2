@@ -18,7 +18,7 @@ jobs:
       - name: Build shaded plugin
         run: |
           ./gradlew :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }} --console=plain 2>&1 | tee "$RUNNER_TEMP/build.log" || {
-            tail -80 "$RUNNER_TEMP/build.log" | while IFS= read -r line; do echo "::error::${line//%/%25}"; done
+            details=$(tail -80 "$RUNNER_TEMP/build.log"); details=${details//%/%25}; echo "::error::${details//$'\n'/%0A}"
             exit 1
           }
         shell: bash
