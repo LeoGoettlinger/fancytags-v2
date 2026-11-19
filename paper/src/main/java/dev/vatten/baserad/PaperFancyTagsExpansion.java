@@ -21,6 +21,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class PaperFancyTagsExpansion extends PlaceholderExpansion {
@@ -52,14 +53,16 @@ public class PaperFancyTagsExpansion extends PlaceholderExpansion {
 
     @Override
     public @NotNull List<String> getPlaceholders() {
-        return plugin.getTagStore().getTagNames();
+        var names = new LinkedHashSet<>(plugin.getTagStore().getTagNames());
+        names.addAll(plugin.displaySwitch.textNames());
+        return List.copyOf(names);
     }
 
     @Override
     public @Nullable String onPlaceholderRequest(Player player, @NotNull String params) {
-        if(plugin.getTagStore().getTagNames().contains(params)) {
-            return plugin.getMiniMessage().serialize(plugin.getTagStore().getTag(params).asComponent());
-        }
-        return null;
+        String text = plugin.displaySwitch.text(params);
+        if (text != null) return text;
+        var graphic = plugin.getTagStore().getTag(params);
+        return graphic == null ? null : graphic.asMiniMessage();
     }
 }

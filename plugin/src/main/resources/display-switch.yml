@@ -1,0 +1,17 @@
+# FancyTags: Anzeige auf DIESEM Server
+# Ohne Eintrag bleibt jeder Tag wie bisher eine Grafik.
+# Beispiel: Für %tags_admin% heißt der Eintrag admin (ohne %tags_ und %).
+#
+# So schaltest du um: Ersetze die letzte Zeile durch das Beispiel unten
+# und entferne das erste # und das Leerzeichen danach aus jeder Beispielzeile.
+# tags:
+#   admin:
+#     anzeige: text
+#     text: "[Admin] "
+#   vip:
+#     anzeige: grafik
+#
+# Text in Anführungszeichen setzen, damit Leerzeichen erhalten bleiben.
+# Auch "" ist erlaubt (nichts anzeigen). Einrücken mit Leerzeichen, nicht mit Tabs.
+# Nach dem Speichern im Spiel /tags reload ausführen.
+tags: {}

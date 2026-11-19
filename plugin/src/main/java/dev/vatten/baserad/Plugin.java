@@ -37,6 +37,7 @@ import java.nio.file.Path;
 import java.util.function.Consumer;
 
 public class Plugin extends VattenPlugin {
+    final DisplaySwitch displaySwitch = new DisplaySwitch();
     private MiniMessage MINIMESSAGE = null;
     private ConfigInstance<PluginConfig> PLUGIN_CONFIG;
     private ConfigInstance<TagsConfig> TAGS_CONFIG;
@@ -77,7 +78,7 @@ public class Plugin extends VattenPlugin {
 
         getEventHandler().registerEventHandler(PlayerLoadInEvent.class, this::onPlayerLoadIn);
 
-        MINIMESSAGE = MiniMessage.builder().tags(TagResolver.builder().resolver(StandardTags.defaults()).resolver(TagResolver.resolver("fancytags", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getTagStore().getTag(queue.pop().value()).asComponent()))).resolver(TagResolver.resolver("fancytags_internal", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getInternalTagStore().getTag(queue.pop().value()).asComponent()))).build()).build();
+        MINIMESSAGE = MiniMessage.builder().tags(TagResolver.builder().resolver(StandardTags.defaults()).resolver(TagResolver.resolver("fancytags", (queue, ctx) -> resolveTag(queue, ctx, false))).resolver(TagResolver.resolver("fancytags_internal", (queue, ctx) -> resolveTag(queue, ctx, true))).build()).build();
     }
 
     @Override
@@ -90,6 +91,7 @@ public class Plugin extends VattenPlugin {
         if(!importPath.toFile().isDirectory()) {
             importPath.toFile().mkdirs();
         }
+        displaySwitch.reload(path, java.util.logging.Logger.getLogger("FancyTags")::warning);
         PLUGIN_CONFIG.load();
         TAGS_CONFIG.load();
         internalTagStore = new InternalTagStore(this);
@@ -133,12 +135,23 @@ public class Plugin extends VattenPlugin {
         return MINIMESSAGE;
     }
 
+    private Tag resolveTag(ArgumentQueue queue, Context ctx, boolean internal) {
+        String name = queue.popOr("Tag-Name fehlt").value();
+        if (!internal) {
+            String text = displaySwitch.text(name);
+            if (text != null) return Tag.selfClosingInserting(Component.text(text));
+        }
+        var graphic = (internal ? internalTagStore : tagStore).getTag(name);
+        if (graphic == null) throw ctx.newException("Unbekannter Tag: " + name, queue);
+        return Tag.selfClosingInserting(graphic.asComponent());
+    }
+
     void registerMiniPlaceholders() {
         Expansion.builder("fancytags")
                 .author("SampleCraft")
                 .version(this.pluginInfo.version())
-                .globalPlaceholder("tag", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getTagStore().getTag(queue.pop().value()).asComponent()))
-                .globalPlaceholder("internal", (ArgumentQueue queue, Context ctx) -> Tag.selfClosingInserting(getInternalTagStore().getTag(queue.pop().value()).asComponent()))
+                .globalPlaceholder("tag", (queue, ctx) -> resolveTag(queue, ctx, false))
+                .globalPlaceholder("internal", (queue, ctx) -> resolveTag(queue, ctx, true))
                 .build()
                 .register();
     }
