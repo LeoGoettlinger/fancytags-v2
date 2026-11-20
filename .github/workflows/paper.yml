@@ -1,5 +1,5 @@
-name: Paper compatibility
-on: [push, pull_request]
+name: Build FancyTags for Paper
+on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
@@ -22,8 +22,9 @@ jobs:
             exit 1
           }
         shell: bash
-      - name: Verify packaged descriptor
+      - name: Verify packaged config and descriptor
         run: |
+          unzip -p paper/build/libs/FancyTags-*.jar display-switch.yml | grep -Fx 'tags: {}'
           unzip -p paper/build/libs/FancyTags-*.jar paper-plugin.yml > "$RUNNER_TEMP/descriptor"
           grep -Fx "api-version: '26.2'" "$RUNNER_TEMP/descriptor"
           grep -Fx 'authors: [SampleCraft]' "$RUNNER_TEMP/descriptor"
