@@ -43,9 +43,13 @@ final class DisplaySwitch {
             }
             try (var reader = Files.newBufferedReader(file)) {
                 Object yaml = new Load(LoadSettings.builder().setLabel(FILE).build()).loadFromReader(reader);
-                if (!(yaml instanceof Map<?, ?> root) || !(root.get("tags") instanceof Map<?, ?> tags)) {
+                if (!(yaml instanceof Map<?, ?> root) || !root.containsKey("tags")) {
                     throw new IllegalArgumentException("Abschnitt 'tags:' fehlt oder hat die falsche Einrückung");
                 }
+                // A template with all examples commented out is a bare "tags:" (YAML null).
+                Object section = root.get("tags");
+                if (section == null) section = Map.of();
+                if (!(section instanceof Map<?, ?> tags)) throw new IllegalArgumentException("'tags:' muss eine Zuordnung sein");
                 Map<String, String> next = new HashMap<>();
                 for (var entry : tags.entrySet()) {
                     if (entry.getKey() instanceof String name && entry.getValue() instanceof Map<?, ?> rule) {

@@ -17,9 +17,7 @@
 package dev.vatten.baserad.commands;
 
 import dev.vatten.baserad.*;
-import dev.vatten.baserad.interfaces.RenderableComponent;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.*;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,37 +50,9 @@ public class TagsCommand extends Command {
                 return;
             }
             if(args[0].equalsIgnoreCase("test")) {
-                player.sendMessage(Component.empty());
-                player.sendMessage(tagStore.getTag("team").asComponent().color(TextColor.color(0xff0000)).append(Component.text(" Vattendroppen236: I'm on the red team").color(NamedTextColor.WHITE)));
-                player.sendMessage(tagStore.getTag("team").asComponent().color(TextColor.color(0x00ff00)).append(Component.text(" Vattendroppen236: I'm on the green team").color(NamedTextColor.WHITE)));
-                player.sendMessage(tagStore.getTag("team").asComponent().color(TextColor.color(0x0000ff)).append(Component.text(" Vattendroppen236: I'm on the blue team").color(NamedTextColor.WHITE)));
-                player.sendMessage(tagStore.getTag("team").asComponent().color(TextColor.color(0xffff00)).append(Component.text(" Vattendroppen236: I'm on the yellow team").color(NamedTextColor.WHITE)));
-                player.sendMessage(Component.empty());
-
-                player.sendMessage(Component.empty());
-                player.sendMessage(tagStore.getTag("owner").asComponent().append(Component.text(" Vattendroppen236: i'm the owner")));
-                player.sendMessage(tagStore.getTag("helper").asComponent().append(Component.text(" Vattendroppen237: W")));
-                player.sendMessage(tagStore.getTag("twitch").asComponent().append(tagStore.getTag("dev").asComponent()).append(Component.text(" Vattendroppen238: yo nice rank Vattendroppen239")));
-                player.sendMessage(tagStore.getTag("admin").asComponent().append(Component.text(" Vattendroppen239: thanks")));
-                player.sendMessage(tagStore.getTag("player").asComponent().append(Component.text(" Steve: Wait how are there so many of you")));
-                player.sendMessage(tagStore.getTag("player").asComponent().append(Component.text(" Steve was banned by ")).append(tagStore.getTag("mod").asComponent().append(Component.text(" Vattendroppen240"))));
-                player.sendMessage(tagStore.getTag("builder").asComponent().append(Component.text(" Vattendroppen241: lmao")));
-                player.sendMessage(tagStore.getTag("youtube").asComponent().append(Component.text(" Vattendroppen242: say hi to youtube")));
-                player.sendMessage(Component.empty());
-
-                player.sendMessage(Component.empty());
-                player.sendMessage(RenderableComponent.centered().component(plugin.getInternalTagStore().getTag("fancytags_logo").asComponent()).build().asComponent());
-                player.sendMessage(Component.empty());
-                player.sendMessage(RenderableComponent.centered().component(
-                        Component.text()
-                                .append(plugin.getInternalTagStore().getTag("simple").asComponent().shadowColor(ShadowColor.shadowColor(0, 0, 0, 255)))
-                                .append(Component.text(" & "))
-                                .append(plugin.getInternalTagStore().getTag("stylish").asComponent())
-                                .append(Component.text(" tags"))
-                                .build()
-                ).build().asComponent());
-                player.sendMessage(RenderableComponent.centered().component(Component.text().append(Component.text("100%", Style.style(TextDecoration.BOLD))).append(Component.text(" Vanilla")).build()).build().asComponent());
-                player.sendMessage(Component.empty());
+                for (String name : tagStore.getTagNames()) {
+                    player.sendMessage(Component.text(name + ": ").append(tagStore.getTag(name).asComponent()));
+                }
                 return;
             }
             if(args.length == 2) {

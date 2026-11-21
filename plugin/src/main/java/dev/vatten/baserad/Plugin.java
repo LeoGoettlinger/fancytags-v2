@@ -32,6 +32,7 @@ import net.kyori.adventure.text.minimessage.tag.resolver.ArgumentQueue;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 import net.kyori.adventure.title.Title;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -139,7 +140,7 @@ public class Plugin extends VattenPlugin {
         String name = queue.popOr("Tag-Name fehlt").value();
         if (!internal) {
             String text = displaySwitch.text(name);
-            if (text != null) return Tag.selfClosingInserting(Component.text(text));
+            if (text != null) return Tag.selfClosingInserting(LegacyComponentSerializer.legacyAmpersand().deserialize(text));
         }
         var graphic = (internal ? internalTagStore : tagStore).getTag(name);
         if (graphic == null) throw ctx.newException("Unbekannter Tag: " + name, queue);

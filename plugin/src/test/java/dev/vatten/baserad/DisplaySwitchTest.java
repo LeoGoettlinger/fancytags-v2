@@ -24,6 +24,26 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DisplaySwitchTest {
+    @Test void shippedRulesMatchAllGraphicBadges(@TempDir Path dir) throws Exception {
+        var rules = new DisplaySwitch();
+        var file = dir.resolve("display-switch.yml");
+        rules.reload(dir, message -> fail(message));
+        assertTrue(rules.textNames().isEmpty());
+        Files.writeString(file, Files.readString(file).replace("\n#  ", "\n  "));
+        rules.reload(dir, message -> fail(message));
+        var badges = new dev.vatten.baserad.configs.TagsConfig().getTags();
+        assertEquals(24, badges.size());
+        assertEquals(badges.keySet(), rules.textNames());
+        assertEquals("&c&lᴏᴡɴᴇʀ &r&7| &c", rules.text("owner"));
+        assertEquals(" &a[TEAM]", rules.text("team"));
+        var mini = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage();
+        for (var tag : badges.values()) {
+            var badge = tag.serialize(mini);
+            assertFalse(badge.children().isEmpty());
+            assertTrue(badge.children().stream().allMatch(net.kyori.adventure.text.ObjectComponent.class::isInstance));
+        }
+    }
+
     @Test void reloadKeepsLiteralTextAndLastValidRules(@TempDir Path dir) throws Exception {
         var rules = new DisplaySwitch();
         var warnings = new ArrayList<String>();

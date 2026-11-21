@@ -1,17 +1,29 @@
-# FancyTags: Anzeige auf DIESEM Server
-# Ohne Eintrag bleibt jeder Tag wie bisher eine Grafik.
-# Beispiel: Für %tags_admin% heißt der Eintrag admin (ohne %tags_ und %).
-#
-# So schaltest du um: Ersetze die letzte Zeile durch das Beispiel unten
-# und entferne das erste # und das Leerzeichen danach aus jeder Beispielzeile.
-# tags:
-#   admin:
-#     anzeige: text
-#     text: "[Admin] "
-#   vip:
-#     anzeige: grafik
-#
-# Text in Anführungszeichen setzen, damit Leerzeichen erhalten bleiben.
-# Auch "" ist erlaubt (nichts anzeigen). Einrücken mit Leerzeichen, nicht mit Tabs.
-# Nach dem Speichern im Spiel /tags reload ausführen.
-tags: {}
+# Pro Server: Ohne aktive Regel bleibt der Tag grafisch (ohne Trenner).
+# Für den Originaltext nur das erste # vor der gewünschten Zeile entfernen.
+# Einrückung, Anführungszeichen, Farbcodes und Leerzeichen beibehalten.
+# Danach im Spiel /tags reload ausführen. Beispiel-Placeholder: %tags_owner%
+tags:
+#  owner: {anzeige: text, text: "&c&lᴏᴡɴᴇʀ &r&7| &c"}
+#  co-owner: {anzeige: text, text: "&b&lᴄᴏ-ᴏᴡɴᴇʀ &r&7| &b"}
+#  team-leitung: {anzeige: text, text: "&6&lᴛᴇᴀᴍ ʟᴇɪᴛᴜɴɢ &r&7| &6"}
+#  dev-leitung: {anzeige: text, text: "&9&lᴅᴇᴠ ʟᴇɪᴛᴜɴɢ &r&7| &9"}
+#  admin: {anzeige: text, text: "&4&lᴀᴅᴍɪɴ &r&7| &4"}
+#  dev: {anzeige: text, text: "&9&lᴅᴇᴠ &r&7| &9"}
+#  co-admin: {anzeige: text, text: "&4&lᴄᴏ ᴀᴅᴍɪɴ &r&7| &4"}
+#  mod-plus: {anzeige: text, text: "&l&1ᴍᴏᴅ + &r&7| &1"}
+#  mod: {anzeige: text, text: "&1&lᴍᴏᴅ &r&7| &1"}
+#  sup-plus: {anzeige: text, text: "&e&lsᴜᴘ + &r&7| &e"}
+#  partner: {anzeige: text, text: "&e&lᴘᴀʀᴛɴᴇʀ &r&7| &e"}
+#  sup: {anzeige: text, text: "&e&lsᴜᴘ &r&7| &e"}
+#  builder: {anzeige: text, text: "&3&lʙᴜɪʟᴅᴇʀ &r&7| &3"}
+#  media: {anzeige: text, text: "&dᴍᴇᴅɪᴀ &r&7| &r&d"}
+#  netherite: {anzeige: text, text: "&0&lɴᴇᴛʜᴇʀɪᴛᴇ &r&7| &7"}
+#  amethyst: {anzeige: text, text: "&5&lᴀᴍᴇᴛʜʏꜱᴛ &r&7| &7"}
+#  og-rang: {anzeige: text, text: "&6&lᴏɢ &r&7| &9"}
+#  diamond: {anzeige: text, text: "&3&lᴅɪᴀᴍᴏɴᴅ &r&7| &7"}
+#  gold: {anzeige: text, text: "&e&lɢᴏʟᴅ &r&7| &7"}
+#  eisen: {anzeige: text, text: "&f&lᴇɪꜱᴇɴ &7| &7"}
+#  stone: {anzeige: text, text: "&7&lꜱᴛᴏɴᴇ &r&7| &7"}
+#  leather: {anzeige: text, text: "&8&lʟᴇᴀᴛʜᴇʀ &r&7| &7"}
+#  spieler: {anzeige: text, text: "&l&7sᴘɪᴇʟᴇʀ &r&7| &7"}
+#  team: {anzeige: text, text: " &a[TEAM]"}
