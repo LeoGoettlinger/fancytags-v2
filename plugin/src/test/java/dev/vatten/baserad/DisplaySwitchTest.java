@@ -40,7 +40,8 @@ class DisplaySwitchTest {
         for (var tag : badges.values()) {
             var badge = tag.serialize(mini);
             assertFalse(badge.children().isEmpty());
-            assertTrue(badge.children().stream().allMatch(net.kyori.adventure.text.ObjectComponent.class::isInstance));
+            assertTrue(badge.children().stream().allMatch(c -> c instanceof net.kyori.adventure.text.ObjectComponent o
+                    && o.contents() instanceof net.kyori.adventure.text.object.PlayerHeadObjectContents));
         }
     }
 

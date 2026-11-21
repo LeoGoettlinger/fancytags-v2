@@ -22,18 +22,13 @@ git remote remove baserad
 ```
 ## Gleicher Rang, andere Anzeige pro Server
 
-Die mitgelieferten Standards basieren auf `fancytags-aktuell.json.gz`: 23 Rangpräfixe ohne Trenner und das reine TEAM-Suffix. Keine Clan-Tags. Die Schlüssel stehen in `plugins/FancyTags/display-switch.yml` (z. B. `%tags_co-owner%` für `owner-für-bob`, `%tags_team%` für `server-team`). OWNER behält seine fünf unveränderten Original-Kopftexturen. Alle anderen Badges sind je ein neu gezeichneter, durchgehender 8-Pixel-Schriftzug in der Rangfarbe. Daraus werden quadratische GUI-Sprites für Minecraft erzeugt. [Grafikvorschau](artwork/Rang-Vorschau.png).
+Die mitgelieferten Standards basieren auf `fancytags-aktuell.json.gz`: 23 Rangpräfixe ohne Trenner und das reine TEAM-Suffix. Keine Clan-Tags. Die Schlüssel stehen in `plugins/FancyTags/display-switch.yml` (z. B. `%tags_co-owner%` für `owner-für-bob`, `%tags_team%` für `server-team`). OWNER behält seine fünf unveränderten Original-Kopftexturen. Alle anderen Badges sind je ein neu gezeichneter, durchgehender 8-Pixel-Schriftzug in der Rangfarbe. Alle Kacheln werden als normale Minecraft-Spielerköpfe dargestellt. [Grafikvorschau](artwork/Rang-Vorschau.png).
 
-### Ressourcenpaket für die 23 neuen Grafiken
+### Installation ohne Ressourcenpaket
 
-Der Actions-Download enthält **die Plugin-JAR und `FancyTags-Ranks.zip`**. Nur die JAR kommt in `plugins/`. Das innere ZIP ist ein Minecraft-Ressourcenpaket für 26.2/26.3. Für einen lokalen Test kannst du es im Client unter Ressourcenpakete aktivieren. Für alle Spieler trägst du auf dem Server eine direkt erreichbare HTTPS-URL zum **inneren ZIP** in `server.properties` ein und startest neu. Beispiel für diesen Build:
+Nur die JAR aus dem erfolgreichen Paper-Build nach `plugins/` kopieren. Spieler benötigen weder ein Ressourcenpaket noch Mods; ihr Minecraft-Client lädt die Kopftexturen wie bei OWNER vom normalen Minecraft-Texturserver. Auch auf dem Server ist dafür **kein MineSkin-Schlüssel** nötig. Die zuletzt ausgelieferten `fancytags:ranks/...`-Sprites werden auch in bestehenden `tags.yml` beim Anzeigen automatisch durch die entsprechenden Köpfe ersetzt. Eigene Sprites anderer Packs bleiben unberührt. Wenn du ausschließlich das alte FancyTags-Pack in `server.properties` eingetragen hattest, kannst du dessen Einträge entfernen; andere Server-Packs nicht abschalten.
 
-```properties
-resource-pack=https://raw.githubusercontent.com/LeoGoettlinger/fancytags-v2/arena/ec44b073-fancytags-v2/artwork/FancyTags-Ranks.zip
-resource-pack-sha1=012de9d6da6cd8079141a65ebf96b0bb3f749df8
-```
-
-Spieler müssen das Paket annehmen. Bei einem privaten Repository das ZIP selbst öffentlich hosten; für einen dauerhaft festen Stand kann der Branchname in der URL durch die Build-Commit-ID ersetzt werden. Bei vorhandenen Server-Packs die `assets/fancytags/`-Dateien integrieren, statt das bestehende Pack zu ersetzen; dann dessen eigenen SHA-1 verwenden. Ohne geladenes Pack funktionieren OWNER und die Textvarianten, die neuen GUI-Sprites fehlen dann beim Client. Kein MineSkin-Schlüssel nötig.
+`artwork/FancyTags-Ranks.zip` ist nur noch die verlustfreie **Build-Vorlage**, kein Client-Download. `tools/badges/sign_heads.py` setzt jede 8×8-Kachel unskaliert auf ein 64×64-Skin, prüft die heruntergegebene Mojang-Kopftextur Pixel für Pixel und speichert die signierten Profile für die JAR. Wiederholte Kacheln werden nur einmal signiert. Die normale Plugin-Ausführung braucht keine Verbindung zu MineSkin.
 
 **Grafik → Originaltext:** Entferne nur das erste `#` in der passenden Zeile der `display-switch.yml`, ohne Einrückung, Farben oder Leerzeichen zu ändern. `/tags reload` ausführen und beispielsweise mit `/papi parse me %tags_owner%` testen. Wieder auskommentieren schaltet zurück zur Grafik. PlaceholderAPI liefert den LuckPerms-Text mit seinen `&`-Codes; die Anzeige muss diese Farben unterstützen.
 

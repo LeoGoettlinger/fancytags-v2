@@ -35,6 +35,8 @@ public class AtlasSymbol extends Symbol {
 
     @Override
     public Component serialize() {
+        PlayerSymbol bundled = BundledHeads.legacyTile(atlas, sprite);
+        if (bundled != null) return bundled.serialize();
         return Component.object(ObjectContents.sprite(Key.key(this.atlas), Key.key(this.sprite)));
     }
 }

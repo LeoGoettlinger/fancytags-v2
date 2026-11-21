@@ -18,17 +18,11 @@ package dev.vatten.baserad.configs;
 
 import de.exlll.configlib.Configuration;
 import dev.vatten.baserad.Tag;
-import dev.vatten.baserad.symbols.Symbol;
-import dev.vatten.baserad.symbols.AtlasSymbol;
+import dev.vatten.baserad.symbols.BundledHeads;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.LinkedHashMap;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Objects;
-import java.util.TreeSet;
-import java.util.Properties;
 import java.util.Map;
 
 @Configuration
@@ -40,20 +34,6 @@ public class TagsConfig {
     {
         tags = new LinkedHashMap<>();
         OriginalRankBadges.addTo(tags);
-        // The index and resource pack are generated together from the same badge artwork.
-        var strips = new Properties();
-        try (var in = TagsConfig.class.getResourceAsStream("/rank-sprites.properties")) {
-            strips.load(Objects.requireNonNull(in, "Missing rank sprite index"));
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot read rank sprite index", e);
-        }
-        for (String rank : new TreeSet<>(strips.stringPropertyNames())) {
-            var symbols = new ArrayList<Symbol>();
-            int widthInTiles = Integer.parseInt(strips.getProperty(rank));
-            for (int i = 0; i < widthInTiles; i++) {
-                symbols.add(new AtlasSymbol("minecraft:gui", "fancytags:ranks/" + rank + "/" + i));
-            }
-            tags.put(rank, new Tag(symbols));
-        }
+        BundledHeads.addDefaults(tags);
     }
 }

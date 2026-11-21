@@ -3,13 +3,54 @@ on: [push, pull_request, workflow_dispatch]
 permissions:
   contents: read
 jobs:
+  textures:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v5
+      - name: Restore previously verified faces
+        if: ${{ hashFiles('plugin/src/main/resources/rank-heads.properties') == '' }}
+        uses: actions/cache/restore@v4
+        with:
+          path: plugin/src/main/resources/head-textures.properties
+          key: signed-ranks-${{ hashFiles('artwork/FancyTags-Ranks.zip') }}-${{ github.run_id }}
+          restore-keys: signed-ranks-${{ hashFiles('artwork/FancyTags-Ranks.zip') }}-
+      - name: Sign missing heads once on the publishing branch
+        if: ${{ hashFiles('plugin/src/main/resources/rank-heads.properties') == '' && github.event_name != 'pull_request' && github.ref == 'refs/heads/arena/ec44b073-fancytags-v2' }}
+        id: sign
+        env:
+          MINESKIN_API_KEY: ${{ secrets.MINESKIN_API_KEY }}
+        run: |
+          python -m pip install requests pillow
+          python -u tools/badges/sign_heads.py 2>&1 | tee "$RUNNER_TEMP/sign.log" || {
+            detail=$(tail -3 "$RUNNER_TEMP/sign.log"); echo "::error::${detail//$'\n'/%0A}"; exit 1;
+          }
+        shell: bash
+      - name: Save verified progress even if MineSkin is unavailable
+        if: ${{ always() && steps.sign.outcome != 'skipped' && hashFiles('plugin/src/main/resources/head-textures.properties') != '' }}
+        uses: actions/cache/save@v4
+        with:
+          path: plugin/src/main/resources/head-textures.properties
+          key: signed-ranks-${{ hashFiles('artwork/FancyTags-Ranks.zip') }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - run: test -s plugin/src/main/resources/rank-heads.properties && test -s plugin/src/main/resources/head-textures.properties
+      - uses: actions/upload-artifact@v4
+        with:
+          name: verified-head-data
+          path: |
+            plugin/src/main/resources/head-textures.properties
+            plugin/src/main/resources/rank-heads.properties
   compile:
+    needs: textures
     runs-on: ubuntu-latest
     strategy:
       matrix:
         paper: ['26.2', '26.3']
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-head-data
+          path: plugin/src/main/resources/
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -17,7 +58,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
       - name: Build shaded plugin
         run: |
-          ./gradlew :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }} --console=plain 2>&1 | tee "$RUNNER_TEMP/build.log" || {
+          ./gradlew :plugin:test :paper:shadowJar -PpaperApiVersion=${{ matrix.paper }} --console=plain 2>&1 | tee "$RUNNER_TEMP/build.log" || {
             details=$(tail -80 "$RUNNER_TEMP/build.log"); details=${details//%/%25}; echo "::error::${details//$'\n'/%0A}"
             exit 1
           }
@@ -28,14 +69,33 @@ jobs:
           unzip -p paper/build/libs/FancyTags-*.jar paper-plugin.yml > "$RUNNER_TEMP/descriptor"
           grep -Fx "api-version: '26.2'" "$RUNNER_TEMP/descriptor"
           grep -Fx 'authors: [SampleCraft]' "$RUNNER_TEMP/descriptor"
-      - name: Stage plugin and matching client resource pack
-        run: |
-          mkdir -p build/download
-          cp paper/build/libs/FancyTags-*.jar artwork/FancyTags-Ranks.zip build/download/
+          unzip -p paper/build/libs/FancyTags-*.jar head-textures.properties > "$RUNNER_TEMP/heads"
+          cmp "$RUNNER_TEMP/heads" plugin/src/main/resources/head-textures.properties
       - name: Upload installable Paper plugin
         if: matrix.paper == '26.2'
         uses: actions/upload-artifact@v4
         with:
           name: FancyTags-Paper-26.2-26.3
-          path: build/download/
+          path: paper/build/libs/FancyTags-*.jar
           if-no-files-found: error
+  preserve-verified-heads:
+    needs: compile
+    if: github.event_name == 'push' && github.ref == 'refs/heads/arena/ec44b073-fancytags-v2'
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: verified-head-data
+          path: plugin/src/main/resources/
+      - name: Keep subsequent builds offline
+        run: |
+          git add plugin/src/main/resources/{rank-heads,head-textures}.properties
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Bundle pixel-verified Mojang head profiles for offline builds'
+            git push origin HEAD:refs/heads/arena/ec44b073-fancytags-v2
+          fi

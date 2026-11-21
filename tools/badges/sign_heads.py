@@ -25,7 +25,8 @@ def generate(face):
     skin = Image.new('RGBA', (64, 64)); skin.paste(face, (8, 8))
     buf = io.BytesIO(); skin.save(buf, 'PNG')
     url = API + '/queue'
-    for _ in range(160):
+    failures = 0
+    for _ in range(240):
         if url.endswith('/queue'):
             r = client.post(url, files={'file': ('badge.png', buf.getvalue(), 'image/png')},
                             data={'name': 'FancyTags', 'visibility': 'unlisted', 'variant': 'classic'}, timeout=90)
@@ -33,6 +34,9 @@ def generate(face):
             r = client.get(url, timeout=45)
         if r.status_code == 429:
             time.sleep(max(10, float(r.headers.get('retry-after', '30')))); continue
+        if r.status_code in (502, 503, 504) and failures < 8:
+            failures += 1
+            time.sleep(min(180, 15 * failures)); continue
         if not r.ok:
             raise RuntimeError(f'MineSkin HTTP {r.status_code}: {r.text[:450]}')
         body = r.json()
@@ -48,7 +52,14 @@ def generate(face):
             time.sleep(max(1, body.get('rateLimit', {}).get('next', {}).get('relative', 0)/1000))
             return value + ',' + signature
         job = body['job']
-        if job['status'] == 'failed': raise RuntimeError(str(body.get('errors', job)))
+        if job['status'] == 'failed':
+            codes = {e.get('code') for e in body.get('errors', [])}
+            if failures < 10 and codes.intersection({'proxy_rate_limited', 'rate_limited', 'upstream_error', 'no_account_available'}):
+                failures += 1
+                delay = min(180, 30 * failures)
+                print(f'MineSkin temporarily unavailable ({codes}); waiting {delay}s', flush=True)
+                time.sleep(delay); url = API + '/queue'; continue
+            raise RuntimeError(str(body.get('errors', job)))
         assert re.fullmatch('[a-zA-Z0-9-]+',job['id'])
         url = API + '/queue/' + job['id']; time.sleep(3)
     raise RuntimeError('Timed out waiting for MineSkin')
