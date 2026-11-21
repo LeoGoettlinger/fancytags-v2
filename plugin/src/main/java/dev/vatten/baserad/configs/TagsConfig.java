@@ -38,19 +38,15 @@ public class TagsConfig {
 
     {
         tags = new LinkedHashMap<>();
-        badge("owner", "Red", "OWNER");
+        OriginalRankBadges.addTo(tags);
         badge("co-owner", "Light Blue", "CO-OWNER");
         badge("team-leitung", "Orange", "TEAM LEITUNG");
         badge("dev-leitung", "Light Blue", "DEV LEITUNG");
-        badge("admin", "Red", "ADMIN");
-        badge("dev", "Light Blue", "DEV");
         badge("co-admin", "Red", "CO ADMIN");
         badge("mod-plus", "Blue", "MOD +");
-        badge("mod", "Blue", "MOD");
         badge("sup-plus", "Yellow", "SUP +");
         badge("partner", "Yellow", "PARTNER");
         badge("sup", "Yellow", "SUP");
-        badge("builder", "Cyan", "BUILDER");
         badge("media", "Pink", "MEDIA");
         badge("netherite", "Black", "NETHERITE");
         badge("amethyst", "Purple", "AMETHYST");
