@@ -28,10 +28,14 @@ jobs:
           unzip -p paper/build/libs/FancyTags-*.jar paper-plugin.yml > "$RUNNER_TEMP/descriptor"
           grep -Fx "api-version: '26.2'" "$RUNNER_TEMP/descriptor"
           grep -Fx 'authors: [SampleCraft]' "$RUNNER_TEMP/descriptor"
+      - name: Stage plugin and matching client resource pack
+        run: |
+          mkdir -p build/download
+          cp paper/build/libs/FancyTags-*.jar artwork/FancyTags-Ranks.zip build/download/
       - name: Upload installable Paper plugin
         if: matrix.paper == '26.2'
         uses: actions/upload-artifact@v4
         with:
           name: FancyTags-Paper-26.2-26.3
-          path: paper/build/libs/FancyTags-*.jar
+          path: build/download/
           if-no-files-found: error

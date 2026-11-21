@@ -1,0 +1,116 @@
+"""Build the offline rank pack, plugin sprite index and a nearest-neighbour preview.
+
+Run from any directory with Python 3 and Pillow. No MineSkin key or network access.
+Golden OWNER rows are palette indices sampled from the five original skin faces.
+"""
+from io import BytesIO
+from pathlib import Path
+from zipfile import ZipFile, ZipInfo, ZIP_DEFLATED
+import json
+import re
+from PIL import Image
+
+ROOT = Path(__file__).resolve().parents[2]
+RES = ROOT / 'plugin/src/main/resources'
+OUT = ROOT / 'artwork'
+OWNER = '''6666666666666666666666666666666666666666
+6677778887787778787778788888788887777766
+6777787448784778488778484444484448777776
+6777784778484878484878488877788887477776
+5666683668388688383688383336683338666665
+1555558885080058080558088888580558055551
+1255555000550555050555050000050555055521
+1122222222222222222222222222222222222211'''.splitlines()
+# Five pixel-high masks; all available letters traced from the original ranks.
+FONT = dict(line.split() for line in '''A 01110/10001/11111/10001/10001
+B 11110/10001/11110/10001/11110
+C 01111/10000/10000/10000/01111
+D 11110/10001/10001/10001/11110
+E 11111/10000/11100/10000/11111
+G 01111/10000/10111/10001/01110
+H 10001/10001/11111/10001/10001
+I 111/010/010/010/111
+L 10000/10000/10000/10000/11111
+M 10001/11011/10101/10001/10001
+N 10001/11001/10101/10011/10001
+O 01110/10001/10001/10001/01110
+P 11110/10001/11110/10000/10000
+R 11110/10001/11110/10001/10001
+S 01111/10000/01110/00001/11110
+T 11111/00100/00100/00100/00100
+U 10001/10001/10001/10001/01110
+V 10001/10001/10001/01010/00100
+W 10001/10001/10101/11011/10001
+Y 10001/01010/00100/00100/00100
++ 000/010/111/010/000
+- 000/000/111/000/000'''.splitlines())
+FONT[' '] = '/'.join(['000'] * 5)
+CODES = '0123456789abcdef'
+HEX = '000000 0000aa 00aa00 00aaaa aa0000 aa00aa ffaa00 aaaaaa 555555 5555ff 55ff55 55ffff ff5555 ff55ff ffff55 ffffff'.split()
+SMALL = str.maketrans('ᴏᴡɴᴇʀᴄᴛᴀᴍʟɪᴜɢᴅᴠᴘʙʏꜱʜ','OWNERCTAMLIUGDVPBYSH')
+
+
+def indexed(label):
+    lines = ['0'.join(row) for row in zip(*(FONT[ch].split('/') for ch in label))]
+    w = (len(lines[0]) + 8 + 7) // 8 * 8
+    dx = (w - len(lines[0])) // 2
+    rows = []
+    for y in range(8):
+        # Preserve the exact two outer columns on either side, extend only the fill.
+        rows.append(list(OWNER[y][:2] + OWNER[y][2] * (w - 4) + OWNER[y][-2:]))
+    pixels = [(dx+x, y+1) for y, row in enumerate(lines) for x, bit in enumerate(row) if bit == '1']
+    for x, y in pixels:
+        rows[y+1][x+1] = {'7':'4','6':'3','5':'0'}[rows[y+1][x+1]]
+    for x, y in pixels:
+        rows[y][x] = '8'
+    return [''.join(row) for row in rows]
+
+
+def palette(base):
+    # Original OWNER midtone is #cc0000. Scale the actual bevel and shadow palette.
+    def shade(level): return tuple(round(c * level / 204) for c in base)
+    light = tuple(round(c+(255-c)*42/255) for c in base)
+    return [shade(93), shade(109), shade(119), shade(124), tuple(round(c*.605) for c in light),
+            shade(154), base, light, (255,255,255)]
+
+
+def png(im):
+    buf = BytesIO(); im.save(buf, 'PNG'); return buf.getvalue()
+
+
+def main():
+    assert indexed('OWNER') == OWNER, 'Pixel geometry differs from the original OWNER'
+    OUT.mkdir(exist_ok=True)
+    pack = {'pack.mcmeta': json.dumps({'pack': {'description':'FancyTags – SampleCraft Rang-Badges',
+            'min_format':[88,0], 'max_format':[97,1]}}).encode()}
+    index, strips = [], []
+    for key, raw in re.findall(r'^#  ([\w-]+): \{anzeige: text, text: "([^"]+)"\}$',
+                               (RES/'display-switch.yml').read_text(), re.M):
+        label = re.sub(r'&[\da-flr]', '', raw.split('|')[0]).strip(' []').translate(SMALL).upper()
+        code = re.search(r'&([0-9a-f])', raw)[1]
+        color = tuple(bytes.fromhex(HEX[CODES.index(code)]))
+        if key == 'owner': color = (204,0,0)  # Signed original is untouched in the JAR.
+        elif code == '0': color = (32,32,32)  # Keep the bevel visible on the black badge.
+        else:
+            # Like OWNER, use a midtone instead of the chat color at full brightness.
+            # Cap luminance on white/yellow so white letter strokes remain legible.
+            r,g,b = color
+            scale = min(.82, 162/max(1,.2126*r+.7152*g+.0722*b))
+            color = tuple(round(v*scale) for v in color)
+        rows = indexed(label); colors = palette(color)
+        im = Image.new('RGB',(len(rows[0]),8)); im.putdata([colors[int(v)] for row in rows for v in row]); strips.append(im)
+        if key != 'owner':
+            n = im.width // 8; index.append(f'{key}={n}')
+            for i in range(n):
+                pack[f'assets/fancytags/textures/gui/sprites/ranks/{key}/{i}.png'] = png(im.crop((i*8,0,i*8+8,8)))
+    assert len(index) == 23 and len(strips) == 24
+    with ZipFile(OUT/'FancyTags-Ranks.zip','w') as z:
+        for path, data in sorted(pack.items()):
+            z.writestr(ZipInfo(path),data,compress_type=ZIP_DEFLATED)
+    (RES/'rank-sprites.properties').write_text('# Generated by tools/badges/build.py\n'+'\n'.join(index)+'\n')
+    w = max(im.width for im in strips)+6
+    preview = Image.new('RGB',(w*3,12*8+4),'#20242a')
+    for i, im in enumerate(strips): preview.paste(im,(3+i%3*w,3+i//3*12))
+    preview.resize((preview.width*4,preview.height*4),Image.Resampling.NEAREST).save(OUT/'Rang-Vorschau.png')
+
+if __name__ == '__main__': main()

@@ -19,7 +19,7 @@ package dev.vatten.baserad.configs;
 import de.exlll.configlib.Configuration;
 import dev.vatten.baserad.Tag;
 import dev.vatten.baserad.symbols.Symbol;
-import dev.vatten.baserad.symbols.PlayerSymbol;
+import dev.vatten.baserad.symbols.AtlasSymbol;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.Properties;
 import java.util.Map;
 
@@ -39,51 +40,20 @@ public class TagsConfig {
     {
         tags = new LinkedHashMap<>();
         OriginalRankBadges.addTo(tags);
-        badge("co-owner", "Light Blue", "CO-OWNER");
-        badge("team-leitung", "Orange", "TEAM LEITUNG");
-        badge("dev-leitung", "Light Blue", "DEV LEITUNG");
-        badge("co-admin", "Red", "CO ADMIN");
-        badge("mod-plus", "Blue", "MOD +");
-        badge("sup-plus", "Yellow", "SUP +");
-        badge("partner", "Yellow", "PARTNER");
-        badge("sup", "Yellow", "SUP");
-        badge("media", "Pink", "MEDIA");
-        badge("netherite", "Black", "NETHERITE");
-        badge("amethyst", "Purple", "AMETHYST");
-        badge("og-rang", "Orange", "OG");
-        badge("diamond", "Cyan", "DIAMOND");
-        badge("gold", "Yellow", "GOLD");
-        badge("eisen", "White", "EISEN");
-        badge("stone", "Light Gray", "STONE");
-        badge("leather", "Gray", "LEATHER");
-        badge("spieler", "Light Gray", "SPIELER");
-        badge("team", "Lime", "TEAM");
-    }
-
-    private static final Properties LETTERS = loadLetters();
-
-    private static Properties loadLetters() {
-        Properties letters = new Properties();
-        try (var in = TagsConfig.class.getResourceAsStream("/badge-letters.properties")) {
-            letters.load(Objects.requireNonNull(in, "Missing badge alphabet"));
-            return letters;
+        // The index and resource pack are generated together from the same badge artwork.
+        var strips = new Properties();
+        try (var in = TagsConfig.class.getResourceAsStream("/rank-sprites.properties")) {
+            strips.load(Objects.requireNonNull(in, "Missing rank sprite index"));
         } catch (IOException e) {
-            throw new ExceptionInInitializerError(e);
+            throw new IllegalStateException("Cannot read rank sprite index", e);
         }
-    }
-
-    private void badge(String name, String palette, String label) {
-        var symbols = new ArrayList<Symbol>();
-        for (char ch : label.toCharArray()) {
-            String glyph = switch (ch) {
-                case ' ' -> "Blank";
-                case '-' -> "Minus";
-                case '+' -> "Plus";
-                default -> String.valueOf(ch);
-            };
-            String key = palette.replace(' ', '_') + "." + glyph;
-            symbols.add(new PlayerSymbol(Objects.requireNonNull(LETTERS.getProperty(key), key), null));
+        for (String rank : new TreeSet<>(strips.stringPropertyNames())) {
+            var symbols = new ArrayList<Symbol>();
+            int widthInTiles = Integer.parseInt(strips.getProperty(rank));
+            for (int i = 0; i < widthInTiles; i++) {
+                symbols.add(new AtlasSymbol("minecraft:gui", "fancytags:ranks/" + rank + "/" + i));
+            }
+            tags.put(rank, new Tag(symbols));
         }
-        tags.put(name, new Tag(symbols));
     }
 }
