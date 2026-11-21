@@ -19,3 +19,14 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+// A jar without the signed profiles builds but cannot enable FancyTags. Fail at packaging instead.
+val bundledHeadFiles = listOf("head-textures.properties", "rank-heads.properties")
+    .map { layout.projectDirectory.file("src/main/resources/$it").asFile }
+tasks.processResources {
+    doFirst {
+        check(bundledHeadFiles.all { it.isFile && it.length() > 0 }) {
+            "Signed rank heads are missing. Use the verified-head-data from the Paper workflow, or run tools/badges/sign_heads.py before building."
+        }
+    }
+}

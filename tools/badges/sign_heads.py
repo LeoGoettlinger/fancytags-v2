@@ -53,8 +53,10 @@ def generate(face):
             return value + ',' + signature
         job = body['job']
         if job['status'] == 'failed':
-            codes = {e.get('code') for e in body.get('errors', [])}
-            if failures < 10 and codes.intersection({'proxy_rate_limited', 'rate_limited', 'upstream_error', 'no_account_available'}):
+            errors = body.get('errors', [])
+            codes = {e.get('code') for e in errors}
+            mojang_limit = any(e.get('code') == 'skin_change_failed' and 'rate-limit' in e.get('message', '').lower() for e in errors)
+            if failures < 10 and (mojang_limit or codes.intersection({'proxy_rate_limited', 'rate_limited', 'upstream_error', 'no_account_available'})):
                 failures += 1
                 delay = min(180, 30 * failures)
                 print(f'MineSkin temporarily unavailable ({codes}); waiting {delay}s', flush=True)

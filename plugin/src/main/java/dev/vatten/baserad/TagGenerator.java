@@ -64,15 +64,22 @@ public class TagGenerator {
         for(int i = 0; i < parts; i++) {
             BufferedImage partImage = bufferedImage.getSubimage(i * 8, 0, 8, 8);
             BufferedImage skinImage = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
-            skinImage.getGraphics().drawImage(partImage, 8, 8, null);
+            var graphics = skinImage.createGraphics();
+            try {
+                graphics.drawImage(partImage, 8, 8, null);
+            } finally {
+                graphics.dispose();
+            }
 
             int symbolIndex = i;
             upload(name, skinImage).thenAccept(skinInfo -> {
-                progress.increase();
-                symbols[symbolIndex] = new PlayerSymbol(skinInfo.texture().data().value(), skinInfo.texture().data().signature());
-                onUpdate.accept(progress);
-                if(progress.getCurrent() == progress.getMax()) {
-                    future.complete(new Tag(List.of(symbols)));
+                // MineSkin may complete several uploads concurrently, in any order.
+                synchronized (progress) {
+                    if (future.isDone()) return;
+                    symbols[symbolIndex] = new PlayerSymbol(skinInfo.texture().data().value(), skinInfo.texture().data().signature());
+                    progress.increase();
+                    onUpdate.accept(progress);
+                    if (progress.getCurrent() == parts) future.complete(new Tag(List.of(symbols)));
                 }
             }).exceptionally(throwable -> {
                 future.completeExceptionally(throwable);

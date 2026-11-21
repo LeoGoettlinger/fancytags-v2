@@ -45,6 +45,24 @@ class DisplaySwitchTest {
         }
     }
 
+    @Test void oldPackTilesResolveToTheSameHeadsInTheSameOrder() throws Exception {
+        var widths = new java.util.Properties();
+        try (var in = getClass().getResourceAsStream("/rank-sprites.properties")) { widths.load(in); }
+        var badges = new dev.vatten.baserad.configs.TagsConfig().getTags();
+        var mini = net.kyori.adventure.text.minimessage.MiniMessage.miniMessage();
+        for (String rank : widths.stringPropertyNames()) {
+            var heads = badges.get(rank).serialize(mini).children();
+            assertEquals(Integer.parseInt(widths.getProperty(rank)), heads.size(), rank);
+            for (int i = 0; i < heads.size(); i++) {
+                var old = new dev.vatten.baserad.symbols.AtlasSymbol("minecraft:gui", "fancytags:ranks/" + rank + "/" + i);
+                assertEquals(heads.get(i), old.serialize(), rank + "/" + i);
+            }
+        }
+        var custom = new dev.vatten.baserad.symbols.AtlasSymbol("minecraft:gui", "custom:icon");
+        assertFalse(((net.kyori.adventure.text.ObjectComponent) custom.serialize()).contents()
+                instanceof net.kyori.adventure.text.object.PlayerHeadObjectContents);
+    }
+
     @Test void reloadKeepsLiteralTextAndLastValidRules(@TempDir Path dir) throws Exception {
         var rules = new DisplaySwitch();
         var warnings = new ArrayList<String>();
