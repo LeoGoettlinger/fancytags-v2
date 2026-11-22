@@ -55,7 +55,7 @@ def generate(face):
         if job['status'] == 'failed':
             errors = body.get('errors', [])
             codes = {e.get('code') for e in errors}
-            mojang_limit = any(e.get('code') == 'skin_change_failed' and 'rate-limit' in e.get('message', '').lower() for e in errors)
+            mojang_limit = any(e.get('code') in {'skin_change_failed', 'cape_change_failed'} and ('rate-limit' in e.get('message', '').lower() or e.get('code') == 'cape_change_failed') for e in errors)
             if failures < 10 and (mojang_limit or codes.intersection({'proxy_rate_limited', 'rate_limited', 'upstream_error', 'no_account_available'})):
                 failures += 1
                 delay = min(180, 30 * failures)
