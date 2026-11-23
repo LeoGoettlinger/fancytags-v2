@@ -121,6 +121,10 @@ jobs:
     continue-on-error: true
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        paper: ['26.2', '26.3']
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -130,7 +134,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-      - name: Boot a real Paper 26.2 server with the built jar
+      - name: Boot a real Paper ${{ matrix.paper }} server with the built jar
         run: |
           set -euo pipefail
           mkdir -p server/plugins && cd server
@@ -145,7 +149,7 @@ jobs:
               builds = payload['builds'] if isinstance(payload, dict) and 'builds' in payload else payload
               return builds[0] if isinstance(builds, list) and builds else builds
           try:
-              b = latest(get('https://fill.papermc.io/v3/projects/paper/versions/26.2/builds'))
+              b = latest(get('https://fill.papermc.io/v3/projects/paper/versions/${{ matrix.paper }}/builds'))
               downloads = b['downloads']
               for key in ('server:default', 'application', 'server'):
                   if isinstance(downloads, dict) and key in downloads:
@@ -156,9 +160,9 @@ jobs:
           except SystemExit:
               raise
           except Exception:
-              v = get('https://api.papermc.io/v2/projects/paper/versions/26.2')
+              v = get('https://api.papermc.io/v2/projects/paper/versions/${{ matrix.paper }}')
               b = v['builds'][-1]
-              print(f"https://api.papermc.io/v2/projects/paper/versions/26.2/builds/{b}/downloads/paper-26.2-{b}.jar")
+              print(f"https://api.papermc.io/v2/projects/paper/versions/${{ matrix.paper }}/builds/{b}/downloads/paper-${{ matrix.paper }}-{b}.jar")
           PY
           )
           curl -fsSL -o paper.jar "$url"
@@ -167,12 +171,12 @@ jobs:
           grep -iE 'Enabling FancyTags|Done \(' out.log | head -5
           echo '--- plugin file seen by the server:'
           ls -l plugins/
-          if ! grep -q 'Done (' out.log; then echo '::error::Paper 26.2 never finished starting'; tail -40 out.log; exit 1; fi
+          if ! grep -q 'Done (' out.log; then echo '::error::Paper ${{ matrix.paper }} never finished starting'; tail -40 out.log; exit 1; fi
           if ! grep -qi 'Enabling FancyTags' out.log; then echo '::error::FancyTags did not enable'; tail -40 out.log; exit 1; fi
           if grep -qiE 'Could not load plugin|Error occurred while enabling FancyTags|Failed to load' out.log; then
             echo '::error::Paper reported a plugin error'; grep -iA6 -E 'Could not load plugin|Error occurred while enabling|Failed to load' out.log | head -40; exit 1
           fi
-          echo "::notice title=Paper 26.2 smoke test::FancyTags enabled on Paper 26.2 with no resource pack and no MineSkin key"
+          echo "::notice title=Paper ${{ matrix.paper }} smoke test::$(grep -i 'Enabling FancyTags' out.log | head -1) — no resource pack, no MineSkin key"
   preserve-verified-heads:
     needs: publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/arena/ec44b073-fancytags-v2'
