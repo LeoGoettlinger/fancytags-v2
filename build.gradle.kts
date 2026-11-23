@@ -66,7 +66,9 @@ allprojects {
     }
 
     tasks.processResources {
-        filesMatching("*") {
+        // Only these files contain ${...} placeholders. Expanding everything would break
+        // opaque data files such as the signed head profiles (Groovy string length limit).
+        filesMatching(listOf("plugin.properties", "paper-plugin.yml", "velocity-plugin.json")) {
             expand(
                 "pluginId" to pluginId,
                 "pluginName" to pluginName,

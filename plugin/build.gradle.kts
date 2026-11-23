@@ -24,13 +24,6 @@ tasks.test {
 val bundledHeadFiles = listOf("head-textures.properties", "rank-heads.properties")
     .map { layout.projectDirectory.file("src/main/resources/$it").asFile }
 tasks.processResources {
-    filesMatching("head-textures.properties") {
-        // The signed profiles are opaque data. Gradle's template engine cannot parse their long lines.
-        filter { it }
-    }
-    filesMatching("rank-heads.properties") {
-        filter { it }
-    }
     doFirst {
         check(bundledHeadFiles.all { it.isFile && it.length() > 0 }) {
             "Signed rank heads are missing. Use the verified-head-data from the Paper workflow, or run tools/badges/sign_heads.py before building."
