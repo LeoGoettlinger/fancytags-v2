@@ -71,15 +71,40 @@ jobs:
           grep -Fx 'authors: [SampleCraft]' "$RUNNER_TEMP/descriptor"
           unzip -p paper/build/libs/FancyTags-*.jar head-textures.properties > "$RUNNER_TEMP/heads"
           cmp "$RUNNER_TEMP/heads" plugin/src/main/resources/head-textures.properties
-      - name: Upload installable Paper plugin
-        if: matrix.paper == '26.2'
+          unzip -p paper/build/libs/FancyTags-*.jar rank-heads.properties > "$RUNNER_TEMP/ranks"
+          cmp "$RUNNER_TEMP/ranks" plugin/src/main/resources/rank-heads.properties
+          test "$(grep -c '=' "$RUNNER_TEMP/heads")" -eq 122
+          test "$(grep -c '=' "$RUNNER_TEMP/ranks")" -eq 23
+          test "$(grep -c 'fancytags:ranks/' <(unzip -p paper/build/libs/FancyTags-*.jar rank-sprites.properties))" -eq 23
+      - name: Stage this Paper version
         uses: actions/upload-artifact@v4
         with:
-          name: FancyTags-Paper-26.2-26.3
+          name: verified-paper-${{ matrix.paper }}
           path: paper/build/libs/FancyTags-*.jar
           if-no-files-found: error
-  preserve-verified-heads:
+          retention-days: 1
+  publish:
     needs: compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: verified-paper-*
+          path: "${{ runner.temp }}/jars"
+      - name: Publish only when both Paper versions verified
+        run: |
+          # Fails the publish step instead of handing out a jar from a half-finished matrix.
+          test -n "$(find "${{ runner.temp }}/jars/verified-paper-26.2" -name 'FancyTags-*.jar')"
+          test -n "$(find "${{ runner.temp }}/jars/verified-paper-26.3" -name 'FancyTags-*.jar')"
+          mkdir -p "${{ runner.temp }}/release"
+          cp "${{ runner.temp }}"/jars/verified-paper-26.2/FancyTags-*.jar "${{ runner.temp }}/release/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FancyTags-Paper-26.2-26.3
+          path: "${{ runner.temp }}/release/FancyTags-*.jar"
+          if-no-files-found: error
+  preserve-verified-heads:
+    needs: publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/arena/ec44b073-fancytags-v2'
     permissions:
       contents: write
