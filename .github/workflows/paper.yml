@@ -43,6 +43,7 @@ jobs:
     needs: textures
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         paper: ['26.2', '26.3']
     steps:
@@ -75,7 +76,13 @@ jobs:
           cmp "$RUNNER_TEMP/ranks" plugin/src/main/resources/rank-heads.properties
           test "$(grep -c '=' "$RUNNER_TEMP/heads")" -eq 122
           test "$(grep -c '=' "$RUNNER_TEMP/ranks")" -eq 23
-          test "$(grep -c 'fancytags:ranks/' <(unzip -p paper/build/libs/FancyTags-*.jar rank-sprites.properties))" -eq 23
+          unzip -p paper/build/libs/FancyTags-*.jar rank-sprites.properties > "$RUNNER_TEMP/widths"
+          test "$(grep -c '=' "$RUNNER_TEMP/widths")" -eq 23
+          # Every rank needs the same number of heads as its strip has tiles.
+          diff <(grep -v '^#' "$RUNNER_TEMP/widths" | cut -d= -f1 | sort) <(grep -v '^#' "$RUNNER_TEMP/ranks" | cut -d= -f1 | sort)
+          while IFS='=' read -r rank width; do
+            test "$(tr ',' '\n' < <(grep "^$rank=" "$RUNNER_TEMP/ranks" | cut -d= -f2-) | grep -c .)" -eq "$width"
+          done < <(grep -v '^#' "$RUNNER_TEMP/widths")
       - name: Stage this Paper version
         uses: actions/upload-artifact@v4
         with:
