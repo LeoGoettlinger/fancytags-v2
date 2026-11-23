@@ -28,6 +28,9 @@ tasks.processResources {
         // The signed profiles are opaque data. Gradle's template engine cannot parse their long lines.
         filter { it }
     }
+    filesMatching("rank-heads.properties") {
+        filter { it }
+    }
     doFirst {
         check(bundledHeadFiles.all { it.isFile && it.length() > 0 }) {
             "Signed rank heads are missing. Use the verified-head-data from the Paper workflow, or run tools/badges/sign_heads.py before building."
